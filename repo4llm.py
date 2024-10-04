@@ -2,12 +2,16 @@ import os
 import re
 import click
 import toml
+import fnmatch
+
+# Global variable to store included files
+included_files = []
 
 def filter_files(files, include, exclude):
     if include:
-        files = [f for f in files if any(f.endswith(ext) for ext in include)]
+        files = [f for f in files if any(fnmatch.fnmatch(f, pattern) for pattern in include)]
     if exclude:
-        files = [f for f in files if not any(f.endswith(ext) for ext in exclude)]
+        files = [f for f in files if not any(fnmatch.fnmatch(f, pattern) for pattern in exclude)]
     return files
 
 def get_project_name(directory):
@@ -44,10 +48,24 @@ def get_git_repo_name(directory):
                         return repo_url.split('/')[-1].replace('.git', '')
     return None
 
+def collect_included_files(directory, include, exclude, max_depth):
+    global included_files
+    for root, dirs, files in os.walk(directory, topdown=True):
+        depth = root[len(directory):].count(os.sep)
+        if max_depth is not None and depth >= max_depth:
+            # Prevent further traversal by clearing dirs
+            dirs[:] = []
+            continue
+
+        # Filter files once per directory
+        files = filter_files(files, include, exclude)
+        for f in files:
+            included_files.append(os.path.join(root, f))
+
 @click.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, readable=True), default='.')
-@click.option('--include', '-i', multiple=True, default=['.py', '.ts', '.js', '.go', '.rust', '.h', '.c', '.cpp', '.conf'], help='Only include files with these extensions (default: .py, .ts, .js, .go, .rust, .h, .c, .cpp, .conf)')
-@click.option('--exclude', '-e', multiple=True, help='Exclude files with these extensions (e.g. .pyc, .log)')
+@click.option('--include', '-i', multiple=True, default=['*.py', '*.ts', '*.js', '*.go', '*.rust', '*.h', '*.c', '*.cpp', '*.conf'], help='Only include files matching these patterns (default: *.py, *.ts, *.js, *.go, *.rust, *.h, *.c, *.cpp, *.conf)')
+@click.option('--exclude', '-e', multiple=True, help='Exclude files matching these patterns (e.g. *.pyc, *.log)')
 @click.option('--max-depth', '-d', type=int, default=None, help='Max depth to traverse in the directory tree')
 @click.option('--output', '-o', type=click.File('w'), default='-', help='Output file to save the result (default is stdout)')
 def generate_tree(directory, include, exclude, max_depth, output):
@@ -78,10 +96,20 @@ def generate_tree(directory, include, exclude, max_depth, output):
             click.echo(f"{indent}  {f}", file=output)
     click.echo("</filetree>\n", file=output)
 
-    # List included files
-    click.echo("---\nIncluded files:\n", file=output)
-    for ext in include:
-        click.echo(f"`{ext}`", file=output)
+    # Collect included files
+    collect_included_files(directory, include, exclude, max_depth)
+
+    # Output the content of all included files
+    click.echo("\n---\n", file=output)
+    for file in included_files:
+        click.echo(f"`{file}`\n", file=output)
+        click.echo("```", file=output)
+        try:
+            with open(file, 'r') as f:
+                click.echo(f.read(), file=output)
+        except Exception as e:
+            click.echo(f"Error reading file {file}: {e}", file=output)
+        click.echo("```\n", file=output)
 
 if __name__ == '__main__':
     generate_tree()
