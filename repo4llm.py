@@ -57,6 +57,10 @@ def check_max_depth(depth, max_depth, dirs):
 def collect_included_files(directory, include, exclude, max_depth):
     global included_files
     for root, dirs, files in scandir.walk(directory, topdown=True):
+        # Apply exclusion patterns and ignore hidden files and directories
+        dirs[:] = [d for d in dirs if not d.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, d), pattern) for pattern in exclude)]
+        files = [f for f in files if not f.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, f), pattern) for pattern in exclude)]
+            
         depth = root[len(directory):].count(os.sep)
         check_max_depth(depth, max_depth, dirs)
 
@@ -95,7 +99,7 @@ def generate_tree(directory, include, exclude, max_depth, output, instructions):
         files = filter_files(files, include, exclude)
         for f in files:
             click.echo(f"{indent}  {f}", file=output)
-    click.echo("</filetree>\n", file=output)
+    click.echo("</filetree>", file=output)
 
     # Collect included files
     collect_included_files(directory, include, exclude, max_depth)
