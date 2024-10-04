@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repo4llm"
-version = "0.1.0"
+version = "0.1.1"
 description = "A command-line tool to make a code repo digestible for an LLMs"
 authors = [
     { name="lhl", email="lhl@randomfoo.net" }
