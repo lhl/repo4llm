@@ -2,6 +2,8 @@
 
 Repo4LLM is a command-line tool designed to generate a summary tree of a codebase, making it easy to ingest into Large Language Models (LLMs) or for general human review. It allows users to selectively include or exclude files and directories, ensuring you can focus on the essential parts of your project.
 
+(see the **Similar Tools** section for other (probably better) tools that do similar things. See why this one exists in the **ChatGPT4o with Canvas** section)
+
 ## Features
 - Generate a structured tree view of a codebase or directory.
 - Include or exclude files based on extensions or patterns.
