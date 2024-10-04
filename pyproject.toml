@@ -3,20 +3,21 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "codebase-tree-tool"
+name = "repo4llm"
 version = "0.1.0"
-description = "A command-line tool to generate a directory tree view with optional filtering."
+description = "A command-line tool to make a code repo digestible for an LLMs"
 authors = [
-    { name="Your Name", email="your.email@example.com" }
+    { name="lhl", email="lhl@randomfoo.net" }
 ]
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent"
 ]
 dependencies = [
-    "click >= 8.0.0"
+    "click",
+    "scandir"
 ]
-scripts = { "codebase-tree" = "codebase_tree_tool:generate_tree" }
+scripts = { "repo4llm" = "repo4llm:generate_tree" }
