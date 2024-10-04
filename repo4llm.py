@@ -5,9 +5,6 @@ import toml
 import fnmatch
 import scandir
 
-# Global variable to store included files
-included_files = []
-
 def filter_files(files, include, exclude):
     if include:
         files = [f for f in files if any(fnmatch.fnmatch(f, pattern) for pattern in include)]
@@ -16,7 +13,6 @@ def filter_files(files, include, exclude):
     return files
 
 def get_project_name(directory):
-    # Check for pyproject.toml
     pyproject_path = os.path.join(directory, 'pyproject.toml')
     if os.path.exists(pyproject_path):
         try:
@@ -24,10 +20,9 @@ def get_project_name(directory):
                 pyproject = toml.load(f)
                 if 'project' in pyproject and 'name' in pyproject['project']:
                     return pyproject['project']['name']
-        except (toml.TomlDecodeError, KeyError, OSError) as e:
-            click.echo(f"Warning: Could not parse pyproject.toml - {e}", err=True)
+        except (toml.TomlDecodeError, KeyError, OSError):
+            pass
 
-    # Check for README files
     readme_files = [f for f in os.listdir(directory) if re.match(r'README(\.\w+)?$', f, re.IGNORECASE)]
     if readme_files:
         with open(os.path.join(directory, readme_files[0]), 'r') as f:
@@ -35,7 +30,6 @@ def get_project_name(directory):
             if first_line.startswith('# '):
                 return first_line[2:]
 
-    # Fallback to directory name
     return os.path.basename(os.path.abspath(directory))
 
 def get_git_repo_name(directory):
@@ -44,30 +38,27 @@ def get_git_repo_name(directory):
         with open(git_path, 'r') as f:
             for line in f:
                 if line.strip().startswith('url = '):
-                    if '=' in line:
-                        repo_url = line.split('=', 1)[1].strip()
-                        return repo_url.split('/')[-1].replace('.git', '')
+                    repo_url = line.split('=', 1)[1].strip()
+                    return repo_url.split('/')[-1].replace('.git', '')
     return None
 
 def check_max_depth(depth, max_depth, dirs):
     if max_depth is not None and depth >= max_depth:
-        # Prevent further traversal by clearing dirs
         dirs[:] = []
 
 def collect_included_files(directory, include, exclude, max_depth):
-    global included_files
+    included_files = []
     for root, dirs, files in scandir.walk(directory, topdown=True):
-        # Apply exclusion patterns and ignore hidden files and directories
-        dirs[:] = [d for d in dirs if not d.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, d), pattern) for pattern in exclude)]
-        files = [f for f in files if not f.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, f), pattern) for pattern in exclude)]
-            
         depth = root[len(directory):].count(os.sep)
         check_max_depth(depth, max_depth, dirs)
 
-        # Filter files once per directory
+        dirs[:] = [d for d in dirs if not d.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, d), pattern) for pattern in exclude)]
+        files = [f for f in files if not f.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, f), pattern) for pattern in exclude)]
+
         files = filter_files(files, include, exclude)
         for f in files:
             included_files.append(os.path.join(root, f))
+    return included_files
 
 @click.command()
 @click.argument('directory', type=click.Path(exists=True, file_okay=False, readable=True), default='.')
@@ -77,10 +68,6 @@ def collect_included_files(directory, include, exclude, max_depth):
 @click.option('--output', '-o', type=click.File('w'), default='-', help='Output file to save the result (default is stdout)')
 @click.option('--instructions', '-t', type=str, default="This is relevant code from the our project repository. If CANVAS or ARTIFACT functionality is available, create one named for each file and output the content, then acknowledge that we are ready to begin work on these files. If the functionality is not available, simply acknowledge that you are ready to begin work on these files.", help='Custom instructions to include at the end of the output')
 def generate_tree(directory, include, exclude, max_depth, output, instructions):
-    """
-    Generate a tree view of the given DIRECTORY (defaults to current directory if not provided), optionally filtering by file type.
-    """
-    # Get project name
     project_name = get_project_name(directory)
     git_repo_name = get_git_repo_name(directory)
     project_title = git_repo_name if git_repo_name else project_name
@@ -92,19 +79,19 @@ def generate_tree(directory, include, exclude, max_depth, output, instructions):
         depth = root[len(directory):].count(os.sep)
         check_max_depth(depth, max_depth, dirs)
 
+        dirs[:] = [d for d in dirs if not d.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, d), pattern) for pattern in exclude)]
+        files = [f for f in files if not f.startswith('.') and not any(fnmatch.fnmatch(os.path.join(root, f), pattern) for pattern in exclude)]
+
         indent = '  ' * depth
         click.echo(f"{indent}{os.path.basename(root)}/", file=output)
 
-        # Filter files once per directory
         files = filter_files(files, include, exclude)
         for f in files:
             click.echo(f"{indent}  {f}", file=output)
     click.echo("</filetree>", file=output)
 
-    # Collect included files
-    collect_included_files(directory, include, exclude, max_depth)
+    included_files = collect_included_files(directory, include, exclude, max_depth)
 
-    # Output the content of all included files
     click.echo("\n---\n", file=output)
     for file in included_files:
         click.echo(f"`{file}`\n", file=output)
@@ -116,13 +103,9 @@ def generate_tree(directory, include, exclude, max_depth, output, instructions):
             click.echo(f"Error reading file {file}: {e}", file=output)
         click.echo("```\n", file=output)
 
-    # Add instructions
     add_instructions(output, instructions)
 
 def add_instructions(output, instructions):
-    """
-    Add instructions to the output.
-    """
     click.echo("---\n", file=output)
     click.echo(instructions, file=output)
 
