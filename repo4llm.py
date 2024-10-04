@@ -54,7 +54,6 @@ def check_max_depth(depth, max_depth, dirs):
         # Prevent further traversal by clearing dirs
         dirs[:] = []
 
-
 def collect_included_files(directory, include, exclude, max_depth):
     global included_files
     for root, dirs, files in scandir.walk(directory, topdown=True):
@@ -72,7 +71,8 @@ def collect_included_files(directory, include, exclude, max_depth):
 @click.option('--exclude', '-e', multiple=True, help='Exclude files matching these patterns (e.g. *.pyc, *.log)')
 @click.option('--max-depth', '-d', type=int, default=None, help='Max depth to traverse in the directory tree')
 @click.option('--output', '-o', type=click.File('w'), default='-', help='Output file to save the result (default is stdout)')
-def generate_tree(directory, include, exclude, max_depth, output):
+@click.option('--instructions', '-t', type=str, default="This is relevant code from the our project repository. If CANVAS or ARTIFACT functionality is available, create one named for each file and output the content, then acknowledge that we are ready to begin work on these files. If the functionality is not available, simply acknowledge that you are ready to begin work on these files.", help='Custom instructions to include at the end of the output')
+def generate_tree(directory, include, exclude, max_depth, output, instructions):
     """
     Generate a tree view of the given DIRECTORY (defaults to current directory if not provided), optionally filtering by file type.
     """
@@ -113,14 +113,14 @@ def generate_tree(directory, include, exclude, max_depth, output):
         click.echo("```\n", file=output)
 
     # Add instructions
-    add_instructions(output)
+    add_instructions(output, instructions)
 
-def add_instructions(output):
+def add_instructions(output, instructions):
     """
     Add instructions to the output.
     """
     click.echo("---\n", file=output)
-    click.echo("This is relevant code from the our project repository. If CANVAS or ARTIFACT functionality is available, create one named for each file and output the content, then acknowledge that we are ready to begin work on these files. If the functionality is not available, simply acknowledge that you are ready to begin work on these files.", file=output)
+    click.echo(instructions, file=output)
 
 if __name__ == '__main__':
     generate_tree()
