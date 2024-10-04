@@ -3,6 +3,7 @@ import re
 import click
 import toml
 import fnmatch
+import scandir
 
 # Global variable to store included files
 included_files = []
@@ -23,7 +24,7 @@ def get_project_name(directory):
                 pyproject = toml.load(f)
                 if 'project' in pyproject and 'name' in pyproject['project']:
                     return pyproject['project']['name']
-        except (toml.TomlDecodeError, KeyError) as e:
+        except (toml.TomlDecodeError, KeyError, OSError) as e:
             click.echo(f"Warning: Could not parse pyproject.toml - {e}", err=True)
 
     # Check for README files
@@ -48,14 +49,17 @@ def get_git_repo_name(directory):
                         return repo_url.split('/')[-1].replace('.git', '')
     return None
 
+def check_max_depth(depth, max_depth, dirs):
+    if max_depth is not None and depth >= max_depth:
+        # Prevent further traversal by clearing dirs
+        dirs[:] = []
+
+
 def collect_included_files(directory, include, exclude, max_depth):
     global included_files
-    for root, dirs, files in os.walk(directory, topdown=True):
+    for root, dirs, files in scandir.walk(directory, topdown=True):
         depth = root[len(directory):].count(os.sep)
-        if max_depth is not None and depth >= max_depth:
-            # Prevent further traversal by clearing dirs
-            dirs[:] = []
-            continue
+        check_max_depth(depth, max_depth, dirs)
 
         # Filter files once per directory
         files = filter_files(files, include, exclude)
@@ -80,12 +84,9 @@ def generate_tree(directory, include, exclude, max_depth, output):
     click.echo(f"Project: {project_title}\n", file=output)
 
     click.echo("<filetree>", file=output)
-    for root, dirs, files in os.walk(directory, topdown=True):
+    for root, dirs, files in scandir.walk(directory, topdown=True):
         depth = root[len(directory):].count(os.sep)
-        if max_depth is not None and depth >= max_depth:
-            # Prevent further traversal by clearing dirs
-            dirs[:] = []
-            continue
+        check_max_depth(depth, max_depth, dirs)
 
         indent = '  ' * depth
         click.echo(f"{indent}{os.path.basename(root)}/", file=output)
@@ -110,6 +111,16 @@ def generate_tree(directory, include, exclude, max_depth, output):
         except Exception as e:
             click.echo(f"Error reading file {file}: {e}", file=output)
         click.echo("```\n", file=output)
+
+    # Add instructions
+    add_instructions(output)
+
+def add_instructions(output):
+    """
+    Add instructions to the output.
+    """
+    click.echo("---\n", file=output)
+    click.echo("This is relevant code from the our project repository. If CANVAS or ARTIFACT functionality is available, create one named for each file and output the content, then acknowledge that we are ready to begin work on these files. If the functionality is not available, simply acknowledge that you are ready to begin work on these files.", file=output)
 
 if __name__ == '__main__':
     generate_tree()
