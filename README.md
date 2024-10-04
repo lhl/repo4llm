@@ -95,13 +95,15 @@ Repo4LLM is licensed under the Apache 2.0 License.
 ## ChatGPT 4o with Canvas
 
 This project was created to test the "ChatGPT 4o using the canvas" feature, which was used almost exclusively to write this tool, including this README file (this line I rewrote, hello from a human). Overall it worked great, although I noticed a few issues:
+- One way this is much better than Claude Artifacts is it goes line-by-line so tends to avoid mistakenly eliding the text when it's editing (a perennial problem I have w/ Artifacts)
 - 4o gets confused about which canvas to edit unless you are VERY specific. Otherwise it will rewrite into the existing canvas even if you ask it to switch
-- The "Code Review" is pretty magical, but the "Fix bugs" functionality sort of sucks since you can't seem to give it context and it just goes
-- Despite having a Python execution environment, it denies it and won't test the Python code? Boo-urns.
-- As context gets longer it gets mega slow. I used 3 chats to work on this.
-- I ran into some bugs where it would constantly rewrite literal "\n"'s into line breaks. It would sometimes not do it if I explicitly told it to be careful not to do it in the artifact, but even then it would sometimes mess up.
+- There is direct editing, which is very nice. It would be nice if there was versioning (even via internal CRDT if not something like a build in git) like Claude's Artifacts, although being revision aware (and including version change notes by turn) would be better
+- In the code menu bar, the "Code Review" is pretty magical, but the "Fix bugs" functionality sort of sucks since you can't seem to give it context and it seems to just go and rewrites *everything* (can you add context or select lines, I didn't test it)
+- Despite having a Python execution environment available, it denies it and won't test the Python code? Boo-urns.
+- As context gets longer it gets mega slow. I used 3 chats to work on this. It'd be nice if there was a "continue editing artifacts in fresh session" or import/export artifacts option. Maybe when OpenAI rolls out their version of Anthropic's Projects?
+- I ran into some bugs where it would constantly rewrite literal "\n"'s into line breaks, but only for certain "\n"s. It would sometimes not do it if I explicitly told it to be careful not to do it in the artifact, but even then it would sometimes mess up.
 - Having git diff/git commit integration would be pretty sweet.
-- Overall, pretty magical, and makes me want to return to check out tools like [Aider](https://github.com/paul-gauthier/aider) to see how it compares now.
+- Overall, pretty magical, and makes me want to return to check out tools like [Aider](https://github.com/paul-gauthier/aider) to see how it compares now, but the OpenAI team that worked on this really nailed a lot of the UX very well.
 
 ### System Prompt
 Here is the "ChatGPT4o with canvas" system prompt:
