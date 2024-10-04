@@ -16,6 +16,12 @@ To install Repo4LLM, use pip:
 pip install repo4llm
 ```
 
+or if you want it in a standalone venv:
+
+```sh
+pipx install repo4llm
+```
+
 ## Usage
 
 Repo4LLM provides a command-line interface for generating a directory tree view. The tool is flexible, allowing you to customize the output to suit your needs.
@@ -33,14 +39,14 @@ This command will generate a tree view of the given directory and print it to th
   
   Example: Include only Python and Markdown files.
   ```sh
-  repo4llm /path/to/codebase -i .py -i .md
+  repo4llm /path/to/codebase -i *.py -i *.md
   ```
 
 - `--exclude` (`-e`): Exclude files with specific extensions.
   
-  Example: Exclude `.pyc` files.
+  Example: Exclude `*.pyc` files.
   ```sh
-  repo4llm /path/to/codebase -e .pyc
+  repo4llm /path/to/codebase -e *.pyc
   ```
 
 - `--max-depth` (`-d`): Limit the depth of directory traversal.
@@ -56,6 +62,8 @@ This command will generate a tree view of the given directory and print it to th
   ```sh
   repo4llm /path/to/codebase -o output.txt
   ```
+
+NOTE: this is hard coded to skip hidden '.' files.
 
 ## How It Works
 Repo4LLM traverses the directory structure, generating an indented tree representation of the files and folders. Users can filter the output by including or excluding specific file types, limiting the output to just what's necessary. This is especially useful for summarizing a codebase to prepare for LLM ingestion, where the focus is on relevant files only.
@@ -86,7 +94,14 @@ Repo4LLM is licensed under the Apache 2.0 License.
 
 ## ChatGPT 4o with Canvas
 
-This project was created with the assistance of ChatGPT 4o using the canvas feature to collaboratively develop, edit, and refine the content.
+This project was created to test the "ChatGPT 4o using the canvas" feature, which was used almost exclusively to write this tool, including this README file (this line I rewrote, hello from a human). Overall it worked great, although I noticed a few issues:
+- 4o gets confused about which canvas to edit unless you are VERY specific. Otherwise it will rewrite into the existing canvas even if you ask it to switch
+- The "Code Review" is pretty magical, but the "Fix bugs" functionality sort of sucks since you can't seem to give it context and it just goes
+- Despite having a Python execution environment, it denies it and won't test the Python code? Boo-urns.
+- As context gets longer it gets mega slow. I used 3 chats to work on this.
+- I ran into some bugs where it would constantly rewrite literal "\n"'s into line breaks. It would sometimes not do it if I explicitly told it to be careful not to do it in the artifact, but even then it would sometimes mess up.
+- Having git diff/git commit integration would be pretty sweet.
+- Overall, pretty magical, and makes me want to return to check out tools like [Aider](https://github.com/paul-gauthier/aider) to see how it compares now.
 
 ### System Prompt
 Here is the "ChatGPT4o with canvas" system prompt:
