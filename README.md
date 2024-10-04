@@ -76,15 +76,13 @@ my_project/
 ## Similar Tools
 Here are some existing projects with similar functionalities:
 
-1. **1FileLLM**: A command-line tool designed to aggregate and preprocess data from multiple sources, creating an information-dense prompt for LLMs. It supports a wide variety of sources, including GitHub repositories, academic papers, and web pages.
+1. [1FileLLM](https://github.com/jimmc414/1filellm): A command-line tool designed to aggregate and preprocess data from multiple sources, creating an information-dense prompt for LLMs. It supports a wide variety of sources, including GitHub repositories, academic papers, and web pages.
 
-2. **GitHub Repo to Text Converter**: A web-based tool that converts GitHub repositories or local directories into formatted text files, facilitating easy input into LLMs. The tool is available at [repo2txt.simplebasedomain.com](https://repo2txt.simplebasedomain.com/).
-
-These tools focus on aggregating data and preprocessing it for LLM consumption, whereas Repo4LLM aims to provide a flexible summary of the directory structure itself.
+2. [GitHub Repo to Text Converter](https://github.com/abinthomasonline/repo2txt): A web-based tool that converts GitHub repositories or local directories into formatted text files, facilitating easy input into LLMs. The tool is also online at [repo2txt.simplebasedomain.com](https://repo2txt.simplebasedomain.com/).
 
 ## License
 
-Repo4LLM is licensed under the MIT License.
+Repo4LLM is licensed under the Apache 2.0 License.
 
 ## ChatGPT 4o with Canvas
 
